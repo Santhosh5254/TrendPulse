@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TrendPulse</title>
+
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+    
+    <link
+    rel="icon"
+    type="image/png"
+    href="{{ url_for('static', filename='favicon.png') }}"
+>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
+
+</head>
+
+
+<body>
+
+    <div class="container">
+
+
+        <!-- =========================
+             HEADER
+        ========================== -->
+
+        <header>
+
+            <div>
+
+                <h1>⚡ TrendPulse</h1>
+
+                <p>
+                    Real-time Hacker News Intelligence
+                </p>
+
+            </div>
+
+
+            <button
+                id="analyzeButton"
+                class="analyze-button"
+            >
+                Analyze Latest Stories
+            </button>
+
+        </header>
+
+
+        <!-- =========================
+             LOADING
+        ========================== -->
+
+        <div
+            id="loading"
+            class="loading hidden"
+        >
+
+            <div class="spinner"></div>
+
+            <p>
+                Collecting and analyzing
+                Hacker News stories...
+            </p>
+
+        </div>
+
+
+        <!-- =========================
+             ERROR
+        ========================== -->
+
+        <div
+            id="error"
+            class="error hidden"
+        ></div>
+
+
+        <!-- =========================
+             DASHBOARD
+        ========================= -->
+
+        <main
+            id="dashboard"
+            class="hidden"
+        >
+
+
+            <!-- Statistics -->
+
+            <section class="stats-grid">
+
+
+                <div class="card">
+
+                    <span class="label">
+                        ARTICLES
+                    </span>
+
+                    <span
+                        id="totalArticles"
+                        class="value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="card">
+
+                    <span class="label">
+                        AVG SCORE
+                    </span>
+
+                    <span
+                        id="averageScore"
+                        class="value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="card">
+
+                    <span class="label">
+                        AVG COMMENTS
+                    </span>
+
+                    <span
+                        id="averageComments"
+                        class="value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="card">
+
+                    <span class="label">
+                        TOP SCORE
+                    </span>
+
+                    <span
+                        id="highestScore"
+                        class="value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+            </section>
+
+
+            <!-- Highlights -->
+
+            <section class="highlights">
+
+
+                <div class="highlight-card">
+
+                    <span class="highlight-label">
+                        🔥 TRENDING CATEGORY
+                    </span>
+
+                    <h2 id="trendingCategory">
+                        -
+                    </h2>
+
+                </div>
+
+
+                <div class="highlight-card">
+
+                    <span class="highlight-label">
+                        💬 MOST COMMENTS
+                    </span>
+
+                    <h2 id="mostComments">
+                        -
+                    </h2>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 CHARTS
+            ========================== -->
+
+            <section class="charts-grid">
+
+
+                <!-- Top Stories Chart -->
+
+                <div class="chart-card chart-wide">
+
+                    <h2>
+                        Top Stories by Score
+                    </h2>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="topStoriesChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Category Chart -->
+
+                <div class="chart-card">
+
+                    <h2>
+                        Articles by Category
+                    </h2>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="categoryChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Scatter Chart -->
+
+                <div class="chart-card">
+
+                    <h2>
+                        Score vs Comments
+                    </h2>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="scatterChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =========================
+                 TOP STORIES TABLE
+            ========================== -->
+
+            <section class="stories-section">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <h2>
+                            🏆 Top Stories
+                        </h2>
+
+                        <p>
+                            Highest scored stories
+                        </p>
+
+                    </div>
+
+
+                    <span
+                        id="analyzedAt"
+                        class="analyzed-at"
+                    >
+                    </span>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    #
+                                </th>
+
+                                <th>
+                                    Story
+                                </th>
+
+                                <th>
+                                    Category
+                                </th>
+
+                                <th>
+                                    Score
+                                </th>
+
+                                <th>
+                                    Comments
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="storiesTable"
+                        >
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+        <!-- =========================
+             WELCOME
+        ========================== -->
+
+        <div
+            id="welcome"
+            class="welcome"
+        >
+
+            <h2>
+                Discover what's trending
+            </h2>
+
+            <p>
+                Click the button above to analyze
+                the latest Hacker News stories.
+            </p>
+
+        </div>
+
+
+    </div>
+
+
+    <script
+        src="{{ url_for('static', filename='js/app.js') }}"
+    ></script>
+
+</body>
+
+</html>

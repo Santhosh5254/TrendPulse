@@ -1,0 +1,27 @@
+# Virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Flask
+instance/
+
+# Generated data
+data/*.csv
+
+# Generated charts
+outputs/*.png

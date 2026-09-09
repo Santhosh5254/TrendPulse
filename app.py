@@ -1,0 +1,335 @@
+from flask import Flask, render_template, jsonify
+import time
+import os
+
+from collectors.hackernews import fetch_hackernews
+from processing.cleaner import clean_data
+from analysis.analyzer import analyze_data
+
+
+app = Flask(__name__)
+
+
+# ==================================================
+# Cache configuration
+# ==================================================
+
+CACHE_DURATION = 5 * 60  # 5 minutes
+
+cached_result = None
+cached_at = 0
+
+
+# ==================================================
+# Create data directory
+# ==================================================
+
+os.makedirs("data", exist_ok=True)
+
+
+# ==================================================
+# Home page
+# ==================================================
+
+@app.route("/")
+def home():
+
+    return render_template("index.html")
+
+
+# ==================================================
+# Analyze Hacker News
+# ==================================================
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+
+    global cached_result
+    global cached_at
+
+    current_time = time.time()
+
+
+    # --------------------------------------------------
+    # Check cache
+    # --------------------------------------------------
+
+    if (
+        cached_result is not None
+        and current_time - cached_at < CACHE_DURATION
+    ):
+
+        print("✓ Returning cached analysis")
+
+        return jsonify(cached_result)
+
+
+    try:
+
+        # --------------------------------------------------
+        # 1. Collect
+        # --------------------------------------------------
+
+        print("\nFetching fresh Hacker News data...")
+
+        articles = fetch_hackernews()
+
+
+        if not articles:
+
+            return jsonify({
+                "success": False,
+                "message": "Failed to collect Hacker News data."
+            }), 500
+
+
+        # --------------------------------------------------
+        # 2. Clean using Pandas
+        # --------------------------------------------------
+
+        df = clean_data(articles)
+
+
+        if df.empty:
+
+            return jsonify({
+                "success": False,
+                "message": "No valid stories were available for analysis."
+            }), 500
+
+
+        # --------------------------------------------------
+        # Save cleaned data
+        # --------------------------------------------------
+
+        clean_path = "data/trends_clean.csv"
+
+        df.to_csv(
+            clean_path,
+            index=False
+        )
+
+        print(
+            f"✓ Cleaned data saved to {clean_path}"
+        )
+
+
+        # --------------------------------------------------
+        # 3. Analyze using NumPy + Pandas
+        # --------------------------------------------------
+
+        analyzed_df, category_analysis, summary = (
+            analyze_data(df)
+        )
+
+
+        # --------------------------------------------------
+        # Save analyzed data
+        # --------------------------------------------------
+
+        analyzed_path = "data/trends_analysed.csv"
+
+        analyzed_df.to_csv(
+            analyzed_path,
+            index=False
+        )
+
+        print(
+            f"✓ Analyzed data saved to {analyzed_path}"
+        )
+
+
+        # --------------------------------------------------
+        # 4. Top 10 stories
+        # --------------------------------------------------
+
+        top_stories = (
+            analyzed_df
+            .sort_values(
+                "score",
+                ascending=False
+            )
+            .head(10)
+        )
+
+
+        top_story_data = []
+
+
+        for _, row in top_stories.iterrows():
+
+            story_id = row["post_id"]
+
+            top_story_data.append({
+
+                "title": row["title"],
+
+                "score": int(
+                    row["score"]
+                ),
+
+                "comments": int(
+                    row["num_comments"]
+                ),
+
+                "category": row["category"],
+
+                "url":
+                    f"https://news.ycombinator.com/item?id={story_id}"
+            })
+
+
+        # --------------------------------------------------
+        # 5. Category distribution
+        # --------------------------------------------------
+
+        category_counts = (
+            analyzed_df["category"]
+            .value_counts()
+        )
+
+
+        category_data = {
+
+            "labels":
+                category_counts.index.tolist(),
+
+            "values":
+                category_counts.values.tolist()
+        }
+
+
+        # --------------------------------------------------
+        # 6. Score vs comments
+        # --------------------------------------------------
+
+        scatter_data = []
+
+
+        for _, row in analyzed_df.iterrows():
+
+            scatter_data.append({
+
+                "x": int(
+                    row["score"]
+                ),
+
+                "y": int(
+                    row["num_comments"]
+                ),
+
+                "title":
+                    row["title"]
+            })
+
+
+        # --------------------------------------------------
+        # 7. Prepare response
+        # --------------------------------------------------
+
+        result = {
+
+            "success": True,
+
+            "analyzed_at":
+                time.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+
+            "summary": {
+
+                "total_articles":
+                    summary["total_articles"],
+
+                "average_score":
+                    round(
+                        summary["average_score"],
+                        2
+                    ),
+
+                "median_score":
+                    round(
+                        summary["median_score"],
+                        2
+                    ),
+
+                "average_comments":
+                    round(
+                        summary["average_comments"],
+                        2
+                    ),
+
+                "most_common_category":
+                    summary["most_common_category"],
+
+                "highest_score":
+                    summary["highest_score"],
+
+                "most_commented_count":
+                    summary["most_commented_count"],
+
+                "highest_scored_story":
+                    summary["highest_scored_story"],
+
+                "most_commented_story":
+                    summary["most_commented_story"]
+            },
+
+            "top_stories":
+                top_story_data,
+
+            "charts": {
+
+                "top_stories":
+                    top_story_data,
+
+                "categories":
+                    category_data,
+
+                "scatter":
+                    scatter_data
+            }
+        }
+
+
+        # --------------------------------------------------
+        # 8. Cache
+        # --------------------------------------------------
+
+        cached_result = result
+
+        cached_at = current_time
+
+        print(
+            "✓ Analysis cached for 5 minutes"
+        )
+
+
+        return jsonify(result)
+
+
+    except Exception as error:
+
+        print(
+            f"✗ Analysis failed: {error}"
+        )
+
+        return jsonify({
+
+            "success": False,
+
+            "message":
+                "An unexpected error occurred while "
+                "analyzing Hacker News data."
+        }), 500
+
+
+# ==================================================
+# Run application
+# ==================================================
+
+if __name__ == "__main__":
+
+    app.run(
+        debug=True
+    )
