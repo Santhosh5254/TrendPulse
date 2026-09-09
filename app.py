@@ -21,10 +21,25 @@ cached_at = 0
 
 
 # ==================================================
+# CSV configuration
+# ==================================================
+
+SAVE_CSV = os.getenv(
+    "SAVE_CSV",
+    "true"
+).lower() == "true"
+
+
+# ==================================================
 # Create data directory
 # ==================================================
 
-os.makedirs("data", exist_ok=True)
+if SAVE_CSV:
+
+    os.makedirs(
+        "data",
+        exist_ok=True
+    )
 
 
 # ==================================================
@@ -102,16 +117,18 @@ def analyze():
         # Save cleaned data
         # --------------------------------------------------
 
-        clean_path = "data/trends_clean.csv"
+        if SAVE_CSV:
 
-        df.to_csv(
-            clean_path,
-            index=False
-        )
+            clean_path = "data/trends_clean.csv"
 
-        print(
-            f"✓ Cleaned data saved to {clean_path}"
-        )
+            df.to_csv(
+                clean_path,
+                index=False
+            )
+
+            print(
+                f"✓ Cleaned data saved to {clean_path}"
+            )
 
 
         # --------------------------------------------------
@@ -127,16 +144,18 @@ def analyze():
         # Save analyzed data
         # --------------------------------------------------
 
-        analyzed_path = "data/trends_analysed.csv"
+        if SAVE_CSV:
 
-        analyzed_df.to_csv(
-            analyzed_path,
-            index=False
-        )
+            analyzed_path = "data/trends_analysed.csv"
 
-        print(
-            f"✓ Analyzed data saved to {analyzed_path}"
-        )
+            analyzed_df.to_csv(
+                analyzed_path,
+                index=False
+            )
+
+            print(
+                f"✓ Analyzed data saved to {analyzed_path}"
+            )
 
 
         # --------------------------------------------------
