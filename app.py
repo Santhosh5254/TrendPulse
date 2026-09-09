@@ -24,10 +24,10 @@ cached_at = 0
 # CSV configuration
 # ==================================================
 
-SAVE_CSV = os.getenv(
-    "SAVE_CSV",
-    "true"
-).lower() == "true"
+SAVE_CSV = (
+    os.getenv("SAVE_CSV", "true").lower() == "true"
+    and os.getenv("VERCEL") != "1"
+)
 
 
 # ==================================================
