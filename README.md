@@ -1,6 +1,9 @@
-# ⚡ TrendPulse
+# TrendPulse
 
-### Real-Time Hacker News Trend Analyzer
+Real-time Hacker News trend analysis dashboard using Python, Pandas, NumPy and Flask.
+
+**Live Demo:** https://trendpulse-nine-beta.vercel.app  
+**GitHub:** https://github.com/Santhosh5254/TrendPulse
 
 TrendPulse is a Python-based data analysis and visualization dashboard that collects trending stories from Hacker News, cleans and transforms the data using Pandas, performs statistical analysis using NumPy and Pandas, and presents the results through an interactive Flask web dashboard.
 
