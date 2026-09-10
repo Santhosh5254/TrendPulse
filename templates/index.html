@@ -36,33 +36,71 @@
 
     <div class="container">
 
-
         <!-- =========================
-             HEADER
-        ========================== -->
+     HEADER
+========================== -->
 
-        <header>
+<header>
 
-            <div>
+    <div>
 
-                <h1>⚡ TrendPulse</h1>
+        <h1>⚡ TrendPulse</h1>
 
-                <p>
-                    Real-time Hacker News Intelligence
-                </p>
+        <p>
+            Real-time Hacker News Intelligence
+        </p>
 
-            </div>
+    </div>
 
 
-            <button
-                id="analyzeButton"
-                class="analyze-button"
-            >
-                Analyze Latest Stories
-            </button>
+    <div class="feed-buttons">
 
-        </header>
+        <button
+            class="feed-button active"
+            data-feed="top"
+        >
+            🔥 Top
+        </button>
 
+        <button
+            class="feed-button"
+            data-feed="new"
+        >
+            🆕 New
+        </button>
+
+        <button
+            class="feed-button"
+            data-feed="best"
+        >
+            ⭐ Best
+        </button>
+
+        <button
+            class="feed-button"
+            data-feed="ask"
+        >
+            💬 Ask HN
+        </button>
+
+        <button
+            class="feed-button"
+            data-feed="show"
+        >
+            🚀 Show HN
+        </button>
+
+    </div>
+
+
+    <button
+        id="analyzeButton"
+        class="analyze-button"
+    >
+        Analyze Top Stories
+    </button>
+
+</header>
 
         <!-- =========================
              LOADING

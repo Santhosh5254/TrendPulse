@@ -5,9 +5,31 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-TOP_STORIES_URL = (
-    "https://hacker-news.firebaseio.com/v0/topstories.json"
-)
+# ==================================================
+# Hacker News API
+# ==================================================
+
+STORY_URLS = {
+
+    "top":
+        "https://hacker-news.firebaseio.com/v0/topstories.json",
+
+    "new":
+        "https://hacker-news.firebaseio.com/v0/newstories.json",
+
+    "best":
+        "https://hacker-news.firebaseio.com/v0/beststories.json",
+
+    "ask":
+        "https://hacker-news.firebaseio.com/v0/askstories.json",
+
+    "show":
+        "https://hacker-news.firebaseio.com/v0/showstories.json",
+
+    "jobs":
+        "https://hacker-news.firebaseio.com/v0/jobstories.json"
+}
+
 
 ITEM_URL = (
     "https://hacker-news.firebaseio.com/v0/item/{}.json"
@@ -132,14 +154,30 @@ def fetch_story(story_id):
         return None
 
 
-def fetch_hackernews():
+def fetch_hackernews(feed_type="top"):
 
-    print("Fetching Hacker News story IDs...")
+    # --------------------------------------------------
+    # Select Hacker News feed
+    # --------------------------------------------------
+
+    if feed_type not in STORY_URLS:
+
+        feed_type = "top"
+
+
+    story_url = STORY_URLS[feed_type]
+
+
+    print(
+        f"Fetching Hacker News "
+        f"{feed_type} story IDs..."
+    )
+
 
     try:
 
         response = requests.get(
-            TOP_STORIES_URL,
+            story_url,
             headers=HEADERS,
             timeout=10
         )

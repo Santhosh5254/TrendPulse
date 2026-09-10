@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import time
 import os
 
@@ -18,6 +18,7 @@ CACHE_DURATION = 5 * 60  # 5 minutes
 
 cached_result = None
 cached_at = 0
+cached_feed = None
 
 
 # ==================================================
@@ -61,8 +62,39 @@ def analyze():
 
     global cached_result
     global cached_at
+    global cached_feed
 
     current_time = time.time()
+
+
+    # --------------------------------------------------
+    # Get selected Hacker News feed
+    # --------------------------------------------------
+
+    data = request.get_json(silent=True) or {}
+
+    feed_type = data.get(
+        "feed",
+        "top"
+    )
+
+
+    # Allow only supported feeds
+
+    allowed_feeds = {
+
+        "top",
+        "new",
+        "best",
+        "ask",
+        "show",
+        "jobs"
+    }
+
+
+    if feed_type not in allowed_feeds:
+
+        feed_type = "top"
 
 
     # --------------------------------------------------
@@ -71,10 +103,14 @@ def analyze():
 
     if (
         cached_result is not None
+        and cached_feed == feed_type
         and current_time - cached_at < CACHE_DURATION
     ):
 
-        print("✓ Returning cached analysis")
+        print(
+            f"✓ Returning cached "
+            f"{feed_type} analysis"
+        )
 
         return jsonify(cached_result)
 
@@ -85,16 +121,22 @@ def analyze():
         # 1. Collect
         # --------------------------------------------------
 
-        print("\nFetching fresh Hacker News data...")
+        print(
+            f"\nFetching fresh Hacker News "
+            f"{feed_type} data..."
+        )
 
-        articles = fetch_hackernews()
+        articles = fetch_hackernews(
+            feed_type
+        )
 
 
         if not articles:
 
             return jsonify({
                 "success": False,
-                "message": "Failed to collect Hacker News data."
+                "message":
+                    "Failed to collect Hacker News data."
             }), 500
 
 
@@ -102,14 +144,18 @@ def analyze():
         # 2. Clean using Pandas
         # --------------------------------------------------
 
-        df = clean_data(articles)
+        df = clean_data(
+            articles
+        )
 
 
         if df.empty:
 
             return jsonify({
                 "success": False,
-                "message": "No valid stories were available for analysis."
+                "message":
+                    "No valid stories were "
+                    "available for analysis."
             }), 500
 
 
@@ -119,7 +165,9 @@ def analyze():
 
         if SAVE_CSV:
 
-            clean_path = "data/trends_clean.csv"
+            clean_path = (
+                "data/trends_clean.csv"
+            )
 
             df.to_csv(
                 clean_path,
@@ -127,7 +175,8 @@ def analyze():
             )
 
             print(
-                f"✓ Cleaned data saved to {clean_path}"
+                f"✓ Cleaned data saved to "
+                f"{clean_path}"
             )
 
 
@@ -146,7 +195,9 @@ def analyze():
 
         if SAVE_CSV:
 
-            analyzed_path = "data/trends_analysed.csv"
+            analyzed_path = (
+                "data/trends_analysed.csv"
+            )
 
             analyzed_df.to_csv(
                 analyzed_path,
@@ -154,7 +205,8 @@ def analyze():
             )
 
             print(
-                f"✓ Analyzed data saved to {analyzed_path}"
+                f"✓ Analyzed data saved to "
+                f"{analyzed_path}"
             )
 
 
@@ -181,20 +233,25 @@ def analyze():
 
             top_story_data.append({
 
-                "title": row["title"],
+                "title":
+                    row["title"],
 
-                "score": int(
-                    row["score"]
-                ),
+                "score":
+                    int(
+                        row["score"]
+                    ),
 
-                "comments": int(
-                    row["num_comments"]
-                ),
+                "comments":
+                    int(
+                        row["num_comments"]
+                    ),
 
-                "category": row["category"],
+                "category":
+                    row["category"],
 
                 "url":
-                    f"https://news.ycombinator.com/item?id={story_id}"
+                    f"https://news.ycombinator.com/"
+                    f"item?id={story_id}"
             })
 
 
@@ -229,13 +286,15 @@ def analyze():
 
             scatter_data.append({
 
-                "x": int(
-                    row["score"]
-                ),
+                "x":
+                    int(
+                        row["score"]
+                    ),
 
-                "y": int(
-                    row["num_comments"]
-                ),
+                "y":
+                    int(
+                        row["num_comments"]
+                    ),
 
                 "title":
                     row["title"]
@@ -248,7 +307,11 @@ def analyze():
 
         result = {
 
-            "success": True,
+            "success":
+                True,
+
+            "feed":
+                feed_type,
 
             "analyzed_at":
                 time.strftime(
@@ -279,19 +342,29 @@ def analyze():
                     ),
 
                 "most_common_category":
-                    summary["most_common_category"],
+                    summary[
+                        "most_common_category"
+                    ],
 
                 "highest_score":
-                    summary["highest_score"],
+                    summary[
+                        "highest_score"
+                    ],
 
                 "most_commented_count":
-                    summary["most_commented_count"],
+                    summary[
+                        "most_commented_count"
+                    ],
 
                 "highest_scored_story":
-                    summary["highest_scored_story"],
+                    summary[
+                        "highest_scored_story"
+                    ],
 
                 "most_commented_story":
-                    summary["most_commented_story"]
+                    summary[
+                        "most_commented_story"
+                    ]
             },
 
             "top_stories":
@@ -319,27 +392,35 @@ def analyze():
 
         cached_at = current_time
 
+        cached_feed = feed_type
+
+
         print(
-            "✓ Analysis cached for 5 minutes"
+            f"✓ {feed_type} analysis "
+            f"cached for 5 minutes"
         )
 
 
-        return jsonify(result)
+        return jsonify(
+            result
+        )
 
 
     except Exception as error:
 
         print(
-            f"✗ Analysis failed: {error}"
+            f"✗ Analysis failed: "
+            f"{error}"
         )
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "message":
-                "An unexpected error occurred while "
-                "analyzing Hacker News data."
+                "An unexpected error occurred "
+                "while analyzing Hacker News data."
         }), 500
 
 

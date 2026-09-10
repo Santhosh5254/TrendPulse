@@ -3,6 +3,20 @@ let categoryChart = null;
 let scatterChart = null;
 
 
+/* =======================================
+   Selected Feed
+======================================= */
+
+let selectedFeed = "top";
+
+
+const feedButtons =
+    document.querySelectorAll(
+        ".feed-button"
+    );
+
+
+
 const analyzeButton =
     document.getElementById(
         "analyzeButton"
@@ -35,6 +49,77 @@ const welcome =
 
 
 /* =======================================
+   Feed Buttons
+======================================= */
+
+feedButtons.forEach(
+    function (button) {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                selectedFeed =
+                    button.dataset.feed;
+
+
+                // Remove active from all buttons
+
+                feedButtons.forEach(
+                    function (btn) {
+
+                        btn.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+
+                // Make selected button active
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                // Update analyze button text
+
+                const feedNames = {
+
+                    top:
+                        "Analyze Top Stories",
+
+                    new:
+                        "Analyze New Stories",
+
+                    best:
+                        "Analyze Best Stories",
+
+                    ask:
+                        "Analyze Ask HN",
+
+                    show:
+                        "Analyze Show HN",
+
+                    jobs:
+                        "Analyze Jobs"
+
+                };
+
+
+                analyzeButton.textContent =
+                    feedNames[selectedFeed];
+
+            }
+        );
+
+    }
+);
+
+
+
+/* =======================================
    Analyze Button
 ======================================= */
 
@@ -44,6 +129,7 @@ analyzeButton.addEventListener(
 
 
         analyzeButton.disabled = true;
+
 
         analyzeButton.textContent =
             "Analyzing...";
@@ -75,7 +161,23 @@ analyzeButton.addEventListener(
             const response = await fetch(
                 "/analyze",
                 {
-                    method: "POST"
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        feed:
+                            selectedFeed
+
+                    })
+
                 }
             );
 
@@ -208,8 +310,31 @@ analyzeButton.addEventListener(
                 false;
 
 
+            const feedNames = {
+
+                top:
+                    "Analyze Top Stories",
+
+                new:
+                    "Analyze New Stories",
+
+                best:
+                    "Analyze Best Stories",
+
+                ask:
+                    "Analyze Ask HN",
+
+                show:
+                    "Analyze Show HN",
+
+                jobs:
+                    "Analyze Jobs"
+
+            };
+
+
             analyzeButton.textContent =
-                "Analyze Latest Stories";
+                feedNames[selectedFeed];
 
         }
 

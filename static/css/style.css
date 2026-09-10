@@ -65,6 +65,62 @@ header p {
 
 
 /* =========================
+   FEED BUTTONS
+========================= */
+
+.feed-buttons {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    justify-content: center;
+}
+
+
+.feed-button {
+
+    border: 1px solid #e5e7eb;
+
+    padding: 9px 14px;
+
+    border-radius: 8px;
+
+    background: white;
+
+    color: #374151;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.feed-button:hover {
+
+    background: #f3f4f6;
+
+    transform: translateY(-1px);
+}
+
+
+.feed-button.active {
+
+    background: #111827;
+
+    color: white;
+
+    border-color: #111827;
+}
+
+
+/* =========================
    BUTTON
 ========================= */
 
@@ -372,6 +428,14 @@ header p {
         align-items: flex-start;
 
         gap: 20px;
+    }
+
+
+    .feed-buttons {
+
+        justify-content: flex-start;
+
+        width: 100%;
     }
 
 
